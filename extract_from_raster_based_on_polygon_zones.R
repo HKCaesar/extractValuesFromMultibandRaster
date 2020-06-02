@@ -1,8 +1,11 @@
 ###################################################################################
 #### Script to extract the values from multiband rasters (Tif, Tiff and BSQ) based on vector zones 
-#### Summarize the extracted pixels to give one value per zone
-#### Recopilado por Lorena González,  Septiembre 2019                          ####
+#### Summarize the extracted pixels to give one value per zone (Like "zonal statistics")
+#### Recopilado por Lorena Gonzalez,  Septiembre 2019                          ####
 ####___________________________________________________________________________####
+
+#### (Set working directory to the location of this script and the functions file) <--- IMPORTANT
+
 #### There are two options for the Inputs: 
 ####  > A.
 ####    + A CSV file list of the raster, vector, output location and selected statistics. Headers:
@@ -68,7 +71,6 @@ tryCatch({ ## Put it all inside a handle error function
         extractThis(inputList[i,1],shapefile(inputList[i,2]), inputList[i,3], inputList[i,4],func,as.double(inputList[i,5])) ## r_file,zones, outFolder, ID_field, func, buf
       }
     } else if (in_mode == 2 || in_mode == 3){ ## Enter inputs
-      
       ##Ask for the vector with the zones
       zones <- askSHP()
       ## Ask if Buffer is necessary
@@ -90,18 +92,16 @@ tryCatch({ ## Put it all inside a handle error function
           ####EXTRACT#### 
           print(paste("Processing raster in folder... ",r_file))
           extractThis(r_file,zones, outFolder,ID_field,func,buf)
-
         }
       }
       if (in_mode == 3){ #### Ask for Raster file ####
         ####EXTRACT####
         r_file <- askRaster() #Get th raster name
-        print(paste("Processing... ",r_file))
         ## Run extraction and saves output, indicate statistic
         extractThis(r_file,zones, outFolder,ID_field,func,buf)
       }
     }
-    print("Finish extracting")
+    print("Finish Script")
   },
   #In case of halting error:
   error = function(e){print(c("An error ocurred: ",e$message))}#,

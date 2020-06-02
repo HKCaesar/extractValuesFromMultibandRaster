@@ -37,6 +37,7 @@ askSHP <- function (default){
 ##   accepts to set the default location to open in the search window.}
 askRaster <- function (default){
   f <- choose.files(default = "", multi = FALSE, caption = "Select the input raster", filters = matrix(c("BSQ","*.bsq","All","*","Tiff","*.tif"),3,2, byrow= TRUE))
+  print(paste("selected raster: ",f)) #Print the selected raster name
   return(f) # Return raster name 
 }
 
