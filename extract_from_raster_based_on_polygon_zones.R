@@ -1,15 +1,18 @@
 ###################################################################################
 #### Script to extract the values from multiband rasters (Tif, Tiff and BSQ) based on vector zones 
 #### Summarize the extracted pixels to give one value per zone (Like "zonal statistics")
-#### Recopilado por Lorena Gonzalez,  Septiembre 2019                          ####
-####___________________________________________________________________________####
+#### Recommnedations:
+#### Have all the layers in the same CRS to avoid trouble
+#### Check the parameter "small" in the definition of func extractThis in "functions_extract.R", related to extracting only if the polygon covers the center of the pixel or not.
+#### Recopilado por Lorena Gonzalez __________________________________________####
 
 #### (Set working directory to the location of this script and the functions file) <--- IMPORTANT
+## Session > Set working directory > To source file Location
 
 #### There are two options for the Inputs: 
 ####  > A.
 ####    + A CSV file list of the raster, vector, output location and selected statistics. Headers:
-####      * raster, vector_zone, output_Folder, zone_ID_field, if_buffer_size
+####      * raster, vector_zone, output_Folder, zone_ID_field, if_buffer_size, band_name (only working for 1 band: for more, see the "Functions_extract.R" file for atomatic naming)
 ####
 ####  > B.
 ####    + A folder that contains all rasters to process
@@ -31,15 +34,11 @@
 #### Get functions and libraries
 ## First set the working directory to the location of this script 
 #setwd("C:\\")
+## Youcan go in the menu: Session -> Set Working Directory -> To Source File Location
 source("functions_extract.R") #Check that the function file is in the same Working directory
 # It needs this packages to be installed
 #require(raster)
 #require(velox)
-
-#### Ask user where to put the output tables
-outFolder <- choose.dir(caption = "Select folder to save output tables")
-#outFolder <- ("C:\\temp\\r") # Set path fix
-print(paste("outFolder is:",outFolder)) #Say which is the output folder
 
 #### summarize using the selected function ("na" stands for: remove NA values)
 # See the functions_extract.R
@@ -50,8 +49,12 @@ func <- mean_na ## Summarize by mean, remove NA values
 #func <- Q3_na ## Summarize by third quartile, remove NA values
 
 ####Field in the shp table to use as identifier of the extracting features
-ID_field <- "Name"
-#ID_field <- "plot"
+#ID_field <- "cluster"
+#ID_field <- "Name"
+ID_field <- "plot"
+
+#### Default folder location
+defaultP = "F:\\Dropbox\\RS_SIP\\COMPASSOficial"
 # }
 
 #### Start of script, will display the menu of options
@@ -63,16 +66,21 @@ tryCatch({ ## Put it all inside a handle error function
     ##Proceed to get input as preferred
     if (in_mode == 1){ #### CSV list of inputs ####
       #Select the CSV file with the list of inputs
-      inputList <- askCSV() # read list from file
+      inputList <- askCSV(defaultP) # read list from file
       ####EXTRACT####
       # run for every item in te list
       for (i in 1:nrow(inputList)) {
         print(paste("Processing list... ",inputList[i,1]))
+        #extractThis(inputList[i,1],shapefile(inputList[i,2]), inputList[i,3], inputList[i,4],func,as.double(inputList[i,5]), band_names = c("cluster",inputList[i,6])) ## r_file,zones, outFolder, ID_field, func, buf, band_names
         extractThis(inputList[i,1],shapefile(inputList[i,2]), inputList[i,3], inputList[i,4],func,as.double(inputList[i,5])) ## r_file,zones, outFolder, ID_field, func, buf
       }
     } else if (in_mode == 2 || in_mode == 3){ ## Enter inputs
+      #### Ask user where to put the output tables
+      #outFolder <- ("C:\\temp\\r") # Set path fix
+      outFolder <- choose.dir(default = defaultP, caption = "Select folder to save output tables")
+      print(paste("outFolder is:",outFolder)) #Say which is the output folder
       ##Ask for the vector with the zones
-      zones <- askSHP()
+      zones <- askSHP(defaultP)
       ## Ask if Buffer is necessary
       buf <- 0 ## The default is no buffer
       if_buf <- menu(c("No", "Yes"), title="Do you want to buffer the input vectors to extract? (Hint: Yes for points)",graphics = TRUE)
@@ -84,7 +92,7 @@ tryCatch({ ## Put it all inside a handle error function
 
       if (in_mode == 2){ #### Process all rasters in a folder ####
         ## Ask user for Raster folder
-        rFolder <- choose.dir(caption = "Select folder that contains the rasters to extract")
+        rFolder <- choose.dir(default = defaultP, caption = "Select folder that contains the rasters to extract")
         #list the rasters inside the folder. Return full path name
         r_list <- list.files(path = rFolder, full.names= TRUE, pattern = "\\.tif$|\\.bsq$|\\.tiff$|\\.dat$") # Select Tif or BSQ for example
         ## Extract each raster
@@ -96,7 +104,7 @@ tryCatch({ ## Put it all inside a handle error function
       }
       if (in_mode == 3){ #### Ask for Raster file ####
         ####EXTRACT####
-        r_file <- askRaster() #Get th raster name
+        r_file <- askRaster(defaultP) #Get th raster name
         ## Run extraction and saves output, indicate statistic
         extractThis(r_file,zones, outFolder,ID_field,func,buf)
       }
